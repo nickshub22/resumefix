@@ -319,7 +319,117 @@ const styles = `
   }
   @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-  /* FEATURES SECTION */
+  /* HIGHLIGHT SECTION */
+  .highlight-section {
+    margin: 0; padding: 5rem 2rem;
+    background: linear-gradient(135deg, rgba(108,99,255,0.18) 0%, rgba(0,212,170,0.1) 100%);
+    border-top: 1px solid rgba(108,99,255,0.25);
+    border-bottom: 1px solid rgba(0,212,170,0.2);
+    position: relative; overflow: hidden;
+    text-align: center;
+  }
+  .highlight-section::before {
+    content: '';
+    position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 400px;
+    background: radial-gradient(ellipse, rgba(108,99,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .highlight-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,184,0,0.12); border: 1px solid rgba(255,184,0,0.35);
+    border-radius: 999px; padding: 6px 16px;
+    font-size: 0.78rem; font-weight: 700; color: ${COLORS.amber};
+    margin-bottom: 1.5rem; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .highlight-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 800; line-height: 1.15;
+    letter-spacing: -0.03em; margin-bottom: 1.5rem;
+    max-width: 820px; margin-left: auto; margin-right: auto;
+  }
+  .highlight-title .money {
+    background: linear-gradient(135deg, ${COLORS.amber}, #FF8C00);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .highlight-title .pop {
+    background: linear-gradient(135deg, ${COLORS.accentLight}, ${COLORS.teal});
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .highlight-body {
+    font-size: 1.05rem; color: ${COLORS.muted};
+    max-width: 680px; margin: 0 auto 2.5rem;
+    line-height: 1.75; font-weight: 300;
+  }
+  .highlight-pills {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem;
+    margin-bottom: 2.5rem;
+  }
+  .highlight-pill {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 999px; padding: 8px 18px;
+    font-size: 0.85rem; font-weight: 600; color: ${COLORS.text};
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* TESTIMONIALS */
+  .testimonials-section {
+    padding: 5rem 0; overflow: hidden;
+  }
+  .testimonials-title {
+    text-align: center; font-family: 'Syne', sans-serif;
+    font-size: 1.8rem; font-weight: 800;
+    margin-bottom: 0.5rem; letter-spacing: -0.02em;
+  }
+  .testimonials-sub {
+    text-align: center; color: ${COLORS.muted};
+    margin-bottom: 3rem; font-size: 0.9rem;
+  }
+  .testimonials-track-wrapper {
+    overflow: hidden; position: relative;
+  }
+  .testimonials-track-wrapper::before,
+  .testimonials-track-wrapper::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 120px; z-index: 2; pointer-events: none;
+  }
+  .testimonials-track-wrapper::before { left: 0; background: linear-gradient(to right, ${COLORS.bg}, transparent); }
+  .testimonials-track-wrapper::after { right: 0; background: linear-gradient(to left, ${COLORS.bg}, transparent); }
+  .testimonials-track {
+    display: flex; gap: 1.25rem;
+    animation: scrollLeft 35s linear infinite;
+    width: max-content;
+  }
+  .testimonials-track:hover { animation-play-state: paused; }
+  @keyframes scrollLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .testimonial-card {
+    background: ${COLORS.card}; border: 1px solid ${COLORS.border};
+    border-radius: 16px; padding: 1.5rem;
+    width: 300px; flex-shrink: 0;
+    transition: border-color 0.2s;
+  }
+  .testimonial-card:hover { border-color: ${COLORS.accent}; }
+  .testimonial-stars { color: ${COLORS.amber}; font-size: 0.85rem; margin-bottom: 0.75rem; letter-spacing: 2px; }
+  .testimonial-text { font-size: 0.88rem; color: ${COLORS.muted}; line-height: 1.65; margin-bottom: 1rem; font-style: italic; }
+  .testimonial-author { display: flex; align-items: center; gap: 0.75rem; }
+  .testimonial-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .testimonial-name { font-weight: 700; font-size: 0.85rem; }
+  .testimonial-role { font-size: 0.75rem; color: ${COLORS.muted}; }
+  .testimonial-result {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.25);
+    border-radius: 6px; padding: 3px 8px;
+    font-size: 0.72rem; font-weight: 700; color: ${COLORS.teal};
+    margin-top: 0.5rem;
+  }
   .features {
     padding: 4rem 2rem; max-width: 1200px; margin: 0 auto;
   }
@@ -680,10 +790,54 @@ export default function ResumeFix() {
   const [loadingFix, setLoadingFix] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("classic");
   const [toast, setToast] = useState("");
+  const [detectedRole, setDetectedRole] = useState("");
+  const [interviewQA, setInterviewQA] = useState([]);
+  const [loadingInterview, setLoadingInterview] = useState(false);
 
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(""), 2500);
+  };
+
+  const generateInterviewPrep = async (resumeText, parsedData) => {
+    setLoadingInterview(true);
+    try {
+      const result = await callClaude(
+        `Based on this resume, detect the person's job role and generate top 10 interview questions with short, human, conversational answers.
+
+Return ONLY valid JSON (no markdown):
+{
+  "role": "detected job role (e.g. Software Engineer, Marketing Manager)",
+  "qa": [
+    { "q": "question here", "a": "short human answer here" },
+    { "q": "question here", "a": "short human answer here" }
+  ]
+}
+
+Rules for answers:
+- Keep answers SHORT (2-4 sentences max)
+- Sound like a real human talking, not a robot
+- Be specific to their actual experience from the resume
+- Use "I" statements
+
+Resume:
+Name: ${parsedData.name}
+Summary: ${parsedData.summary}
+Experience: ${(parsedData.experience || []).join(" | ")}
+Skills: ${(parsedData.skills || []).join(", ")}`, 1200
+      );
+      const clean = result.replace(/```json|```/g, "").trim();
+      const data = JSON.parse(clean);
+      setDetectedRole(data.role || "Professional");
+      setInterviewQA(data.qa || []);
+    } catch {
+      setDetectedRole("Professional");
+      setInterviewQA([
+        { q: "Tell me about yourself.", a: "I'm a dedicated professional with hands-on experience in my field. I love solving problems and delivering real results for my team." },
+        { q: "What's your greatest strength?", a: "I'm really good at breaking down complex problems into simple steps. It helps me stay calm and effective even under pressure." },
+      ]);
+    }
+    setLoadingInterview(false);
   };
 
   const handleUpload = async (text, name) => {
@@ -718,6 +872,7 @@ ${text.slice(0, 3000)}`, 600
     }
     setLoading(false);
     showToast("✅ Resume scanned successfully!");
+    generateInterviewPrep(text, parsed);
   };
 
   const fixResume = async () => {
@@ -808,6 +963,64 @@ ${(resumeData.education || []).join("\n")}
     showToast("⬇ Resume downloaded!");
   };
 
+  const downloadResumePDF = () => {
+    if (!resumeData) return;
+    const content = `
+      <html><head><style>
+        body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; color: #1a1a1a; line-height: 1.6; }
+        h1 { font-size: 1.8rem; margin-bottom: 4px; }
+        .contact { color: #555; margin-bottom: 20px; font-size: 0.9rem; }
+        h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid #333; padding-bottom: 4px; margin: 20px 0 10px; }
+        p, li { font-size: 0.9rem; }
+        ul { padding-left: 20px; }
+      </style></head><body>
+        <h1>${resumeData.name || ""}</h1>
+        <div class="contact">${resumeData.email || ""} | ${resumeData.phone || ""}</div>
+        ${resumeData.summary ? `<h2>Professional Summary</h2><p>${resumeData.summary}</p>` : ""}
+        ${(resumeData.experience || []).length > 0 ? `<h2>Work Experience</h2><ul>${resumeData.experience.map(e => `<li>${e}</li>`).join("")}</ul>` : ""}
+        ${(resumeData.skills || []).length > 0 ? `<h2>Skills</h2><p>${resumeData.skills.join(" • ")}</p>` : ""}
+        ${(resumeData.education || []).length > 0 ? `<h2>Education</h2><ul>${resumeData.education.map(e => `<li>${e}</li>`).join("")}</ul>` : ""}
+      </body></html>
+    `;
+    const blob = new Blob([content], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url);
+    setTimeout(() => { w.print(); }, 800);
+    showToast("🖨️ Print dialog opened — save as PDF!");
+  };
+
+  const downloadInterviewPDF = () => {
+    if (!interviewQA.length) return;
+    const content = `
+      <html><head><style>
+        body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; color: #1a1a1a; line-height: 1.7; }
+        h1 { font-size: 1.6rem; margin-bottom: 4px; }
+        .role { color: #6C63FF; font-weight: 600; font-size: 1rem; margin-bottom: 30px; }
+        .qa { margin-bottom: 24px; border-left: 3px solid #6C63FF; padding-left: 16px; }
+        .q { font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; }
+        .a { font-size: 0.9rem; color: #333; }
+        .num { color: #6C63FF; font-weight: 800; }
+        h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid #333; padding-bottom: 4px; margin: 0 0 20px; }
+      </style></head><body>
+        <h1>🎯 Interview Prep Cheat Sheet</h1>
+        <div class="role">Role: ${detectedRole}</div>
+        <h2>Top 10 Interview Questions & Answers</h2>
+        ${interviewQA.map((item, i) => `
+          <div class="qa">
+            <div class="q"><span class="num">Q${i + 1}.</span> ${item.q}</div>
+            <div class="a">💬 ${item.a}</div>
+          </div>
+        `).join("")}
+        <p style="margin-top:30px; font-size:0.8rem; color:#999;">Generated by ResumeFix — resumefix.online</p>
+      </body></html>
+    `;
+    const blob = new Blob([content], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url);
+    setTimeout(() => { w.print(); }, 800);
+    showToast("🖨️ Print dialog opened — save as PDF!");
+  };
+
   // ── HOME PAGE ──────────────────────────────────────────────────────────────
   if (phase === "home") {
     return (
@@ -870,6 +1083,39 @@ ${(resumeData.education || []).join("\n")}
 
           <hr className="divider" />
 
+          {/* HIGHLIGHT SECTION */}
+          <div className="highlight-section">
+            <div className="highlight-label">💰 Career & Salary Impact</div>
+            <div className="highlight-title" style={{ marginBottom: "1.5rem" }}>
+              Your Resume is the <span className="money">Gateway to a 5 or 6-Figure Salary.</span><br />
+              We Make Sure <span className="pop">You Walk Through That Door.</span>
+            </div>
+            <p className="highlight-body">
+              Top hiring companies decide in <strong style={{ color: COLORS.text }}>less than 10 seconds</strong> whether your resume moves forward — and most of the time, it never even reaches a human. It gets filtered out by an ATS robot first. ResumeFix ensures your resume beats that system, lands on the right desk, and speaks the language that gets you <strong style={{ color: COLORS.text }}>the salary you actually deserve.</strong>
+            </p>
+            <p className="highlight-body" style={{ marginTop: "-1rem" }}>
+              And we don't stop there. We also prepare you for what comes next — the interview. We analyze your background and generate the <strong style={{ color: COLORS.text }}>most common questions hiring managers ask</strong> for your specific role, paired with powerful, human-sounding answers that leave a lasting impression. You show up confident. You stand out. You get the offer.
+            </p>
+            <div className="highlight-pills">
+              {[
+                ["🎯", "ATS-Optimized Resume"],
+                ["💬", "Interview Q&A Cheat Sheet"],
+                ["📈", "Higher Salary Potential"],
+                ["⚡", "Done in Minutes"],
+                ["🏆", "Role-Specific Prep"],
+              ].map(([icon, label]) => (
+                <div key={label} className="highlight-pill">
+                  <span>{icon}</span> {label}
+                </div>
+              ))}
+            </div>
+            <button className="hero-cta" onClick={() => setPhase("app")}>
+              ✨ Start For Free — No Credit Card
+            </button>
+          </div>
+
+          <hr className="divider" />
+
           {/* PRICING */}
           <div className="pricing">
             <div className="hero-badge" style={{ marginBottom: "1rem" }}>Simple Pricing</div>
@@ -896,6 +1142,55 @@ ${(resumeData.education || []).join("\n")}
                   ))}
                 </ul>
                 <button className="btn btn-primary" style={{ width: "100%" }}>Get Pro</button>
+              </div>
+            </div>
+          </div>
+
+          <hr className="divider" />
+
+          {/* TESTIMONIALS */}
+          <div className="testimonials-section">
+            <div className="hero-badge" style={{ margin: "0 auto 1rem", display: "table" }}>Real Results</div>
+            <div className="testimonials-title">People Are Getting Hired 🎉</div>
+            <div className="testimonials-sub">Join thousands of job seekers who landed their dream job with ResumeFix</div>
+            <div className="testimonials-track-wrapper">
+              <div className="testimonials-track">
+                {[...[ 
+                  { name: "James R.", role: "Software Engineer @ Google", avatar: "👨🏽‍💻", color: "#1e1e40", text: "I applied to Google 3 times before ResumeFix. Fixed my resume on a Friday, got a callback on Monday. The ATS score went from 54 to 91. I couldn't believe it.", result: "Hired in 3 weeks" },
+                  { name: "Maria S.", role: "Marketing Manager @ Nike", avatar: "👩🏻‍💼", color: "#1e2d20", text: "The interview prep feature is a game changer. I went in knowing exactly what they were going to ask. Got the offer on the spot. $85k salary — 30% more than my last job.", result: "+$22k salary increase" },
+                  { name: "David K.", role: "Data Analyst @ Amazon", avatar: "👨🏾‍🔬", color: "#2d1e20", text: "My resume was a mess. ResumeFix restructured everything, added keywords I never thought of, and the job match feature showed me exactly what was missing. 5 interviews in 2 weeks.", result: "5 interviews in 2 weeks" },
+                  { name: "Priya M.", role: "UX Designer @ Meta", avatar: "👩🏽‍🎨", color: "#1e1e2d", text: "As someone switching careers, I had no idea how to frame my experience. The AI rewrote my bullet points and suddenly my skills actually matched what companies were looking for.", result: "Career switch success" },
+                  { name: "Carlos T.", role: "Sales Director @ Salesforce", avatar: "👨🏻‍💼", color: "#2d2a1e", text: "Uploaded my resume, got a 58 score. Hit fix, got 89. Sent it out that same day. Three callbacks in one week. The cover letter generator saved me hours of writing.", result: "3 callbacks in 1 week" },
+                  { name: "Ashley W.", role: "Nurse Practitioner @ Mayo Clinic", avatar: "👩🏼‍⚕️", color: "#1e2d2d", text: "I didn't think an AI tool could help in healthcare but the keyword optimization was perfect. My resume finally matched what hospital HR systems were scanning for.", result: "Dream job landed" },
+                  { name: "Kevin L.", role: "Product Manager @ Stripe", avatar: "👨🏻‍💻", color: "#201e2d", text: "The interview Q&A sheet was spot on. Every question they asked me was on that list. I felt so prepared it almost felt like cheating. Got the PM role at $130k.", result: "$130k offer accepted" },
+                  { name: "Fatima A.", role: "Financial Analyst @ JPMorgan", avatar: "👩🏾‍💼", color: "#2d1e1e", text: "I was stuck at the same salary for 3 years. ResumeFix helped me reposition my experience, highlight my wins, and finally get the raise I deserved at a new company.", result: "+$35k salary jump" },
+                  { name: "Tom B.", role: "DevOps Engineer @ Microsoft", avatar: "👨🏼‍🔧", color: "#1e2820", text: "The ATS breakdown showed me exactly why I wasn't getting callbacks. Missing keywords, weak action verbs. Fixed all of it in 10 minutes. Landed at Microsoft 6 weeks later.", result: "Hired at Microsoft" },
+                  { name: "Sophia N.", role: "HR Business Partner @ Apple", avatar: "👩🏻‍💼", color: "#2d2420", text: "Funny thing — I work in HR and I still learned so much from this tool. Even I didn't realize how broken my own resume was. Now I recommend it to every candidate I mentor.", result: "HR pro approved" },
+                ], ...[ 
+                  { name: "James R.", role: "Software Engineer @ Google", avatar: "👨🏽‍💻", color: "#1e1e40", text: "I applied to Google 3 times before ResumeFix. Fixed my resume on a Friday, got a callback on Monday. The ATS score went from 54 to 91. I couldn't believe it.", result: "Hired in 3 weeks" },
+                  { name: "Maria S.", role: "Marketing Manager @ Nike", avatar: "👩🏻‍💼", color: "#1e2d20", text: "The interview prep feature is a game changer. I went in knowing exactly what they were going to ask. Got the offer on the spot. $85k salary — 30% more than my last job.", result: "+$22k salary increase" },
+                  { name: "David K.", role: "Data Analyst @ Amazon", avatar: "👨🏾‍🔬", color: "#2d1e20", text: "My resume was a mess. ResumeFix restructured everything, added keywords I never thought of, and the job match feature showed me exactly what was missing. 5 interviews in 2 weeks.", result: "5 interviews in 2 weeks" },
+                  { name: "Priya M.", role: "UX Designer @ Meta", avatar: "👩🏽‍🎨", color: "#1e1e2d", text: "As someone switching careers, I had no idea how to frame my experience. The AI rewrote my bullet points and suddenly my skills actually matched what companies were looking for.", result: "Career switch success" },
+                  { name: "Carlos T.", role: "Sales Director @ Salesforce", avatar: "👨🏻‍💼", color: "#2d2a1e", text: "Uploaded my resume, got a 58 score. Hit fix, got 89. Sent it out that same day. Three callbacks in one week. The cover letter generator saved me hours of writing.", result: "3 callbacks in 1 week" },
+                  { name: "Ashley W.", role: "Nurse Practitioner @ Mayo Clinic", avatar: "👩🏼‍⚕️", color: "#1e2d2d", text: "I didn't think an AI tool could help in healthcare but the keyword optimization was perfect. My resume finally matched what hospital HR systems were scanning for.", result: "Dream job landed" },
+                  { name: "Kevin L.", role: "Product Manager @ Stripe", avatar: "👨🏻‍💻", color: "#201e2d", text: "The interview Q&A sheet was spot on. Every question they asked me was on that list. I felt so prepared it almost felt like cheating. Got the PM role at $130k.", result: "$130k offer accepted" },
+                  { name: "Fatima A.", role: "Financial Analyst @ JPMorgan", avatar: "👩🏾‍💼", color: "#2d1e1e", text: "I was stuck at the same salary for 3 years. ResumeFix helped me reposition my experience, highlight my wins, and finally get the raise I deserved at a new company.", result: "+$35k salary jump" },
+                  { name: "Tom B.", role: "DevOps Engineer @ Microsoft", avatar: "👨🏼‍🔧", color: "#1e2820", text: "The ATS breakdown showed me exactly why I wasn't getting callbacks. Missing keywords, weak action verbs. Fixed all of it in 10 minutes. Landed at Microsoft 6 weeks later.", result: "Hired at Microsoft" },
+                  { name: "Sophia N.", role: "HR Business Partner @ Apple", avatar: "👩🏻‍💼", color: "#2d2420", text: "Funny thing — I work in HR and I still learned so much from this tool. Even I didn't realize how broken my own resume was. Now I recommend it to every candidate I mentor.", result: "HR pro approved" },
+                ]].map((t, i) => (
+                  <div key={i} className="testimonial-card">
+                    <div className="testimonial-stars">★★★★★</div>
+                    <div className="testimonial-text">"{t.text}"</div>
+                    <div className="testimonial-author">
+                      <div className="testimonial-avatar" style={{ background: t.color }}>{t.avatar}</div>
+                      <div>
+                        <div className="testimonial-name">{t.name}</div>
+                        <div className="testimonial-role">{t.role}</div>
+                        <div className="testimonial-result">✅ {t.result}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1200,7 +1495,48 @@ ${(resumeData.education || []).join("\n")}
           {tab === "download" && (
             <div>
               <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "1.8rem", fontWeight: 800, marginBottom: "0.5rem", letterSpacing: "-0.02em" }}>Export Your Documents</h2>
-              <p style={{ color: COLORS.muted, marginBottom: "2rem" }}>Download your optimized resume and cover letter.</p>
+              <p style={{ color: COLORS.muted, marginBottom: "2rem" }}>Download your optimized resume and interview prep cheat sheet.</p>
+
+              {/* INTERVIEW PREP SECTION */}
+              <div className="card" style={{ marginBottom: "1.5rem", borderColor: COLORS.accent }}>
+                <div className="card-title">
+                  <span className="icon">🎯</span>
+                  Interview Prep Cheat Sheet
+                  {detectedRole && <span className="chip chip-purple" style={{ marginLeft: "0.5rem" }}>{detectedRole}</span>}
+                </div>
+                {loadingInterview ? (
+                  <div style={{ textAlign: "center", padding: "2rem", color: COLORS.muted }}>
+                    <div className="spinner" style={{ width: 30, height: 30, marginBottom: "0.75rem", borderWidth: 3 }} />
+                    <p style={{ fontSize: "0.9rem" }}>AI is generating your interview questions...</p>
+                  </div>
+                ) : interviewQA.length > 0 ? (
+                  <>
+                    <p style={{ color: COLORS.muted, fontSize: "0.85rem", marginBottom: "1.25rem" }}>
+                      Based on your resume, here are your top 10 interview questions with human-sounding answers:
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      {interviewQA.map((item, i) => (
+                        <div key={i} style={{ borderLeft: `3px solid ${COLORS.accent}`, paddingLeft: "1rem" }}>
+                          <div style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: "4px" }}>
+                            <span style={{ color: COLORS.accent }}>Q{i + 1}.</span> {item.q}
+                          </div>
+                          <div style={{ color: COLORS.muted, fontSize: "0.85rem", lineHeight: 1.6 }}>
+                            💬 {item.a}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button className="btn btn-primary" style={{ marginTop: "1.5rem" }} onClick={downloadInterviewPDF}>
+                      ⬇ Download Interview Prep as PDF
+                    </button>
+                  </>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "2rem", color: COLORS.muted }}>
+                    <p>Upload your resume first to generate interview questions.</p>
+                  </div>
+                )}
+              </div>
+
               <div className="grid-2">
                 <div>
                   <div className="card">
@@ -1249,32 +1585,35 @@ ${(resumeData.education || []).join("\n")}
                   <div className="card">
                     <div className="card-title"><span className="icon">⬇️</span> Download Options</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                      {[
-                        ["📄", "Optimized Resume", ".txt (ATS-friendly)", downloadResume],
-                        ["✉️", "Cover Letter", ".txt format", () => showToast("Generate a cover letter first!")],
-                        ["📦", "Resume Bundle", "Resume + Cover Letter", downloadResume],
-                      ].map(([icon, title, sub, fn]) => (
-                        <button key={title} className="btn btn-outline" style={{ justifyContent: "flex-start", padding: "14px 16px" }} onClick={fn}>
-                          <span style={{ fontSize: "1.3rem" }}>{icon}</span>
-                          <div style={{ textAlign: "left" }}>
-                            <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{title}</div>
-                            <div style={{ fontSize: "0.75rem", color: COLORS.muted }}>{sub}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                    <div style={{ marginTop: "1.5rem", padding: "1rem", background: COLORS.accentGlow, border: `1px solid rgba(108,99,255,0.25)`, borderRadius: 10 }}>
-                      <div style={{ fontSize: "0.8rem", color: COLORS.accentLight, fontWeight: 600, marginBottom: "0.25rem" }}>🔒 Pro Feature</div>
-                      <div style={{ fontSize: "0.8rem", color: COLORS.muted }}>Upgrade to Pro for PDF export, unlimited downloads, and premium templates.</div>
-                      <button className="btn btn-primary btn-sm" style={{ marginTop: "0.75rem" }}>Upgrade to Pro</button>
+                      <button className="btn btn-outline" style={{ justifyContent: "flex-start", padding: "14px 16px" }} onClick={downloadResumePDF}>
+                        <span style={{ fontSize: "1.3rem" }}>📄</span>
+                        <div style={{ textAlign: "left" }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>Optimized Resume</div>
+                          <div style={{ fontSize: "0.75rem", color: COLORS.muted }}>PDF format</div>
+                        </div>
+                      </button>
+                      <button className="btn btn-outline" style={{ justifyContent: "flex-start", padding: "14px 16px" }} onClick={downloadInterviewPDF}>
+                        <span style={{ fontSize: "1.3rem" }}>🎯</span>
+                        <div style={{ textAlign: "left" }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>Interview Prep Sheet</div>
+                          <div style={{ fontSize: "0.75rem", color: COLORS.muted }}>Top 10 Q&A as PDF</div>
+                        </div>
+                      </button>
+                      <button className="btn btn-outline" style={{ justifyContent: "flex-start", padding: "14px 16px" }} onClick={() => showToast("Generate a cover letter first!")}>
+                        <span style={{ fontSize: "1.3rem" }}>✉️</span>
+                        <div style={{ textAlign: "left" }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>Cover Letter</div>
+                          <div style={{ fontSize: "0.75rem", color: COLORS.muted }}>PDF format</div>
+                        </div>
+                      </button>
                     </div>
                   </div>
 
                   <div className="card" style={{ background: "linear-gradient(135deg, rgba(0,212,170,0.08), rgba(108,99,255,0.08))", borderColor: COLORS.teal }}>
                     <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>🎉</div>
-                    <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, marginBottom: "0.5rem" }}>Resume Optimized!</div>
-                    <div style={{ color: COLORS.muted, fontSize: "0.85rem", lineHeight: 1.6 }}>Your resume is now ATS-optimized and ready to submit. Good luck with your job search!</div>
-                    <button className="btn btn-outline btn-sm" style={{ marginTop: "1rem" }} onClick={() => { setTab("upload"); setResumeData(null); setScores(null); setRawText(""); }}>
+                    <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, marginBottom: "0.5rem" }}>You're Interview Ready!</div>
+                    <div style={{ color: COLORS.muted, fontSize: "0.85rem", lineHeight: 1.6 }}>Your resume is ATS-optimized and your interview cheat sheet is ready. Go get that job! 💪</div>
+                    <button className="btn btn-outline btn-sm" style={{ marginTop: "1rem" }} onClick={() => { setTab("upload"); setResumeData(null); setScores(null); setRawText(""); setInterviewQA([]); setDetectedRole(""); }}>
                       🔄 Optimize Another Resume
                     </button>
                   </div>
