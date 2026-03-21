@@ -407,6 +407,10 @@ const styles = `
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
   }
+  @keyframes progressBar {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
   .testimonial-card {
     background: ${COLORS.card}; border: 1px solid ${COLORS.border};
     border-radius: 16px; padding: 1.5rem;
@@ -852,6 +856,7 @@ export default function ResumeFix() {
   const [interviewQA, setInterviewQA] = useState([]);
   const [loadingInterview, setLoadingInterview] = useState(false);
   const [coverLetterText, setCoverLetterText] = useState("");
+  const [fixStep, setFixStep] = useState(0);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -972,39 +977,70 @@ ${text.slice(0, 3000)}`, 600
   const fixResume = async () => {
     if (!resumeData) return;
     setLoadingFix(true);
+    setFixStep(1);
     try {
-      const result = await callClaude(
-        `Optimize this resume for ATS and tailor it to the job description below. Return ONLY valid JSON (no markdown):
-{
-  "name": "${resumeData.name || ""}",
-  "email": "${resumeData.email || ""}",
-  "phone": "${resumeData.phone || ""}",
-  "summary": "improved 2-3 sentence professional summary tailored to the job with keywords",
-  "experience": ["optimized bullet 1 with action verb and metrics matching job", "optimized bullet 2", "optimized bullet 3", "optimized bullet 4"],
-  "skills": ["skill1", "skill2", "skill3", "skill4", "skill5", "skill6", "skill7", "skill8"],
-  "education": ${JSON.stringify(resumeData.education || [])},
-  "certifications": ${JSON.stringify(resumeData.certifications || [])},
-  "projects": ${JSON.stringify(resumeData.projects || [])}
-}
+      setTimeout(() => setFixStep(2), 2000);
+      setTimeout(() => setFixStep(3), 5000);
+      setTimeout(() => setFixStep(4), 9000);
 
-Original resume:
-Name: ${resumeData.name}
-Summary: ${resumeData.summary}
+      const prompt = `You are a professional resume writer. Optimize this resume for ATS and tailor it to the job description.
+
+IMPORTANT: Return ONLY a valid JSON object. No explanation, no markdown, no code blocks. Just the raw JSON.
+
+The JSON must have exactly these fields:
+- name (string)
+- email (string)  
+- phone (string)
+- summary (string: 2-3 sentences tailored to the job)
+- experience (array of strings: each is a bullet point starting with action verb)
+- skills (array of strings: skills relevant to the job)
+- education (array of strings)
+- certifications (array of strings)
+- projects (array of strings)
+
+CURRENT RESUME:
+Name: ${resumeData.name || ""}
+Email: ${resumeData.email || ""}
+Phone: ${resumeData.phone || ""}
+Summary: ${resumeData.summary || ""}
 Experience: ${(resumeData.experience || []).join(" | ")}
 Skills: ${(resumeData.skills || []).join(", ")}
+Education: ${(resumeData.education || []).join(", ")}
 
-Job Description to tailor for:
-${jobDesc ? jobDesc.slice(0, 1500) : "General professional role — optimize for ATS with strong action verbs and measurable results."}
+JOB DESCRIPTION:
+${(jobDesc || "Optimize for a general professional role").slice(0, 1500)}
 
-Rules: strong action verbs, measurable results, include keywords from job description, ATS-friendly format.`, 1200
-      );
-      const clean = result.replace(/```json|```/g, "").trim();
-      const improved = JSON.parse(clean);
-      setResumeData(improved);
+Rewrite with strong action verbs, measurable achievements, and keywords from the job description.`;
+
+      const result = await callClaude(prompt, 1500);
+      
+      // Try to extract JSON even if there's extra text
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON found");
+      
+      const improved = JSON.parse(jsonMatch[0]);
+      
+      // Make sure all fields exist
+      const safe = {
+        name: improved.name || resumeData.name || "",
+        email: improved.email || resumeData.email || "",
+        phone: improved.phone || resumeData.phone || "",
+        summary: improved.summary || resumeData.summary || "",
+        experience: Array.isArray(improved.experience) ? improved.experience : resumeData.experience || [],
+        skills: Array.isArray(improved.skills) ? improved.skills : resumeData.skills || [],
+        education: Array.isArray(improved.education) ? improved.education : resumeData.education || [],
+        certifications: Array.isArray(improved.certifications) ? improved.certifications : [],
+        projects: Array.isArray(improved.projects) ? improved.projects : [],
+      };
+
+      setResumeData(safe);
+      setFixStep(5);
       setScores((prev) => prev ? { ...prev, ats: Math.min(98, prev.ats + 18), keyword: Math.min(98, prev.keyword + 15), impact: Math.min(98, prev.impact + 20) } : prev);
       showToast("🚀 Resume tailored to the job!");
-    } catch {
-      showToast("Error fixing resume. Try again.");
+    } catch (err) {
+      console.error("fixResume error:", err);
+      setFixStep(0);
+      showToast("❌ Error optimizing. Please try again.");
     }
     setLoadingFix(false);
   };
@@ -1525,10 +1561,39 @@ ${(resumeData.education || []).join("\n")}
                 {/* RIGHT — Resume Preview */}
                 <div>
                   {loadingFix ? (
-                    <div style={{ textAlign: "center", padding: "4rem", color: COLORS.muted }}>
-                      <div className="spinner" style={{ width: 40, height: 40, marginBottom: "1rem", borderWidth: 3 }} />
-                      <p>AI is tailoring your resume to the job...</p>
-                      <p style={{ fontSize: "0.8rem", marginTop: "0.5rem", color: COLORS.dim }}>Adding matching keywords & rewriting bullet points ✨</p>
+                    <div className="card" style={{ padding: "2.5rem" }}>
+                      <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: "1rem", marginBottom: "1.5rem" }}>⚙️ AI is working on your resume...</div>
+                      {[
+                        [1, "Reading your resume"],
+                        [2, "Analyzing job requirements"],
+                        [3, "Rewriting bullet points"],
+                        [4, "Adding ATS keywords"],
+                        [5, "Finalizing optimized resume"],
+                      ].map(([step, label]) => (
+                        <div key={step} style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+                          <div style={{
+                            width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: "0.75rem", fontWeight: 700,
+                            background: fixStep >= step ? COLORS.accent : COLORS.surface,
+                            border: `2px solid ${fixStep >= step ? COLORS.accent : COLORS.dim}`,
+                            color: fixStep >= step ? "white" : COLORS.dim,
+                            transition: "all 0.4s ease",
+                          }}>
+                            {fixStep > step ? "✓" : step}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: "0.85rem", color: fixStep >= step ? COLORS.text : COLORS.dim, fontWeight: fixStep === step ? 600 : 400, transition: "color 0.4s" }}>{label}</div>
+                            {fixStep === step && (
+                              <div style={{ height: 3, background: COLORS.surface, borderRadius: 2, marginTop: 4, overflow: "hidden" }}>
+                                <div style={{ height: "100%", background: COLORS.accent, borderRadius: 2, animation: "progressBar 2s ease-in-out infinite", width: "60%" }} />
+                              </div>
+                            )}
+                          </div>
+                          {fixStep > step && <span style={{ color: COLORS.teal, fontSize: "0.8rem" }}>✅</span>}
+                          {fixStep === step && <span className="spinner" style={{ width: 14, height: 14 }} />}
+                        </div>
+                      ))}
                     </div>
                   ) : resumeData?.name ? (
                     <div>
