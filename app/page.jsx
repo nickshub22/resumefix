@@ -534,7 +534,11 @@ const parseResumeText = (text) => {
 const callClaude = async (prompt, maxTokens = 1500) => {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
       max_tokens: maxTokens,
@@ -542,6 +546,7 @@ const callClaude = async (prompt, maxTokens = 1500) => {
     }),
   });
   const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
   return data.content?.map((b) => b.text || "").join("") || "";
 };
 
@@ -1423,7 +1428,8 @@ ${(resumeData.education || []).join("\n")}
               {loading ? (
                 <div style={{ textAlign: "center", padding: "4rem", color: COLORS.muted }}>
                   <div className="spinner" style={{ width: 40, height: 40, marginBottom: "1rem", borderWidth: 3 }} />
-                  <p>Analyzing your resume with AI...</p>
+                  <p style={{ marginBottom: "0.5rem" }}>Reading and analyzing your resume with AI...</p>
+                  <p style={{ fontSize: "0.8rem", color: COLORS.dim }}>This may take 10-20 seconds ⏳</p>
                 </div>
               ) : scores && (
                 <div className="grid-2">
@@ -1494,9 +1500,12 @@ ${(resumeData.education || []).join("\n")}
             <div>
               <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "1.8rem", fontWeight: 800, marginBottom: "0.5rem", letterSpacing: "-0.02em" }}>AI Resume Fixer</h2>
               <p style={{ color: COLORS.muted, marginBottom: "1.5rem" }}>Let AI optimize your resume for maximum ATS impact.</p>
-              <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap", alignItems: "center" }}>
                 <button className="btn btn-primary" onClick={fixResume} disabled={loadingFix}>
                   {loadingFix ? <><span className="spinner" /> Optimizing with AI...</> : "🤖 Fix My Resume With AI"}
+                </button>
+                <button className="btn btn-teal" onClick={downloadResumePDF}>
+                  ⬇ Download Resume PDF
                 </button>
                 <button className="btn btn-outline" onClick={() => setTab("match")}>Next: Job Match →</button>
               </div>
