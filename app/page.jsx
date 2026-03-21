@@ -1499,49 +1499,91 @@ ${(resumeData.education || []).join("\n")}
           {tab === "fix" && (
             <div>
               <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "1.8rem", fontWeight: 800, marginBottom: "0.5rem", letterSpacing: "-0.02em" }}>AI Resume Fixer</h2>
-              <p style={{ color: COLORS.muted, marginBottom: "1.5rem" }}>Let AI optimize your resume for maximum ATS impact.</p>
-              <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem", flexWrap: "wrap", alignItems: "center" }}>
-                <button className="btn btn-primary" onClick={fixResume} disabled={loadingFix}>
+              <p style={{ color: COLORS.muted, marginBottom: "1.5rem" }}>Click the button below and AI will optimize your entire resume instantly.</p>
+
+              {/* ACTION BUTTONS */}
+              <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap", alignItems: "center" }}>
+                <button className="btn btn-primary" style={{ padding: "12px 28px" }} onClick={fixResume} disabled={loadingFix}>
                   {loadingFix ? <><span className="spinner" /> Optimizing with AI...</> : "🤖 Fix My Resume With AI"}
                 </button>
-                <button className="btn btn-teal" onClick={downloadResumePDF}>
-                  ⬇ Download Resume PDF
-                </button>
-                <button className="btn btn-outline" onClick={() => setTab("match")}>Next: Job Match →</button>
+                {resumeData?.name && (
+                  <button className="btn btn-outline" onClick={() => setTab("match")}>
+                    Next: Job Match →
+                  </button>
+                )}
               </div>
-              <div className="grid-2">
-                <div className="card" style={{ maxHeight: 600, overflowY: "auto" }}>
-                  <div className="card-title"><span className="icon">✏️</span> Resume Editor</div>
-                  {resumeData && <ResumeEditor data={resumeData} onChange={setResumeData} />}
+
+              {/* LOADING STATE */}
+              {loadingFix && (
+                <div style={{ textAlign: "center", padding: "3rem", color: COLORS.muted }}>
+                  <div className="spinner" style={{ width: 40, height: 40, marginBottom: "1rem", borderWidth: 3 }} />
+                  <p>AI is rewriting your resume...</p>
+                  <p style={{ fontSize: "0.8rem", marginTop: "0.5rem", color: COLORS.dim }}>Adding strong action verbs, measurable results & ATS keywords ✨</p>
                 </div>
-                <div>
-                  <div className="card" style={{ fontFamily: "Georgia, serif", lineHeight: 1.7, fontSize: "0.88rem", background: "#FAFAFA", color: "#1A1A1A" }}>
-                    <div style={{ fontFamily: "'Syne', sans-serif", fontSize: "0.75rem", color: COLORS.muted, marginBottom: "1rem", background: COLORS.bg, padding: "6px 12px", borderRadius: 8, display: "inline-block" }}>📄 Preview</div>
-                    <div style={{ borderBottom: "2px solid #333", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
-                      <div style={{ fontSize: "1.4rem", fontWeight: 700, fontFamily: "Georgia, serif" }}>{resumeData?.name || "Your Name"}</div>
-                      <div style={{ color: "#666", fontSize: "0.85rem" }}>{resumeData?.email} | {resumeData?.phone}</div>
+              )}
+
+              {/* RESUME PREVIEW */}
+              {!loadingFix && resumeData && (
+                <div style={{ maxWidth: 800, margin: "0 auto" }}>
+                  <div style={{ background: "white", borderRadius: 16, padding: "2.5rem", color: "#1A1A1A", fontFamily: "Georgia, serif", lineHeight: 1.75, boxShadow: "0 4px 40px rgba(0,0,0,0.3)" }}>
+
+                    {/* HEADER */}
+                    <div style={{ borderBottom: "2px solid #1A1A1A", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
+                      <div style={{ fontSize: "1.8rem", fontWeight: 700, letterSpacing: "-0.02em" }}>{resumeData.name || "Your Name"}</div>
+                      <div style={{ color: "#555", fontSize: "0.9rem", marginTop: "4px" }}>
+                        {[resumeData.email, resumeData.phone].filter(Boolean).join(" · ")}
+                      </div>
                     </div>
-                    {resumeData?.summary && (
-                      <div style={{ marginBottom: "1rem" }}>
-                        <div style={{ fontWeight: 700, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: "0.1em", marginBottom: "0.4rem", color: "#333" }}>Professional Summary</div>
-                        <p style={{ color: "#444", fontSize: "0.85rem" }}>{resumeData.summary}</p>
+
+                    {/* SUMMARY */}
+                    {resumeData.summary && (
+                      <div style={{ marginBottom: "1.5rem" }}>
+                        <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.5rem", fontFamily: "sans-serif" }}>Professional Summary</div>
+                        <p style={{ fontSize: "0.9rem", color: "#333" }}>{resumeData.summary}</p>
                       </div>
                     )}
-                    {(resumeData?.experience || []).length > 0 && (
-                      <div style={{ marginBottom: "1rem" }}>
-                        <div style={{ fontWeight: 700, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: "0.1em", marginBottom: "0.4rem", color: "#333" }}>Experience</div>
-                        {resumeData.experience.map((e, i) => <div key={i} style={{ color: "#444", fontSize: "0.85rem", marginBottom: "0.3rem" }}>• {e}</div>)}
+
+                    {/* EXPERIENCE */}
+                    {(resumeData.experience || []).length > 0 && (
+                      <div style={{ marginBottom: "1.5rem" }}>
+                        <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.75rem", fontFamily: "sans-serif" }}>Work Experience</div>
+                        {resumeData.experience.map((e, i) => (
+                          <div key={i} style={{ fontSize: "0.88rem", color: "#333", marginBottom: "0.4rem", paddingLeft: "1rem", borderLeft: "2px solid #ddd" }}>• {e}</div>
+                        ))}
                       </div>
                     )}
-                    {(resumeData?.skills || []).length > 0 && (
+
+                    {/* SKILLS */}
+                    {(resumeData.skills || []).length > 0 && (
+                      <div style={{ marginBottom: "1.5rem" }}>
+                        <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.5rem", fontFamily: "sans-serif" }}>Skills</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                          {resumeData.skills.map((s, i) => (
+                            <span key={i} style={{ background: "#f0f0f0", borderRadius: 6, padding: "3px 10px", fontSize: "0.82rem", color: "#333" }}>{s}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* EDUCATION */}
+                    {(resumeData.education || []).length > 0 && (
                       <div>
-                        <div style={{ fontWeight: 700, textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: "0.1em", marginBottom: "0.4rem", color: "#333" }}>Skills</div>
-                        <div style={{ color: "#444", fontSize: "0.85rem" }}>{resumeData.skills.join(" • ")}</div>
+                        <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.5rem", fontFamily: "sans-serif" }}>Education</div>
+                        {resumeData.education.map((e, i) => (
+                          <div key={i} style={{ fontSize: "0.88rem", color: "#333", marginBottom: "0.3rem" }}>• {e}</div>
+                        ))}
                       </div>
                     )}
                   </div>
+
+                  {/* NEXT BUTTON BELOW PREVIEW */}
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "1.5rem" }}>
+                    <button className="btn btn-primary" style={{ padding: "14px 40px", fontSize: "1rem" }} onClick={() => setTab("match")}>
+                      Next: Job Match →
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
