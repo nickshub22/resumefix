@@ -974,14 +974,14 @@ ${text.slice(0, 3000)}`, 600
     setLoadingFix(true);
     try {
       const result = await callClaude(
-        `Optimize this resume for ATS. Return ONLY valid JSON with improved content (no markdown):
+        `Optimize this resume for ATS and tailor it to the job description below. Return ONLY valid JSON (no markdown):
 {
-  "name": "...",
-  "email": "...",
-  "phone": "...",
-  "summary": "improved 2-3 sentence professional summary with keywords",
-  "experience": ["optimized bullet 1 with action verb and metrics", "optimized bullet 2", "optimized bullet 3"],
-  "skills": ["skill1", "skill2", "skill3", "skill4", "skill5", "skill6"],
+  "name": "${resumeData.name || ""}",
+  "email": "${resumeData.email || ""}",
+  "phone": "${resumeData.phone || ""}",
+  "summary": "improved 2-3 sentence professional summary tailored to the job with keywords",
+  "experience": ["optimized bullet 1 with action verb and metrics matching job", "optimized bullet 2", "optimized bullet 3", "optimized bullet 4"],
+  "skills": ["skill1", "skill2", "skill3", "skill4", "skill5", "skill6", "skill7", "skill8"],
   "education": ${JSON.stringify(resumeData.education || [])},
   "certifications": ${JSON.stringify(resumeData.certifications || [])},
   "projects": ${JSON.stringify(resumeData.projects || [])}
@@ -993,13 +993,16 @@ Summary: ${resumeData.summary}
 Experience: ${(resumeData.experience || []).join(" | ")}
 Skills: ${(resumeData.skills || []).join(", ")}
 
-Improve with: strong action verbs, measurable results, ATS-friendly keywords, clear structure.`, 1000
+Job Description to tailor for:
+${jobDesc ? jobDesc.slice(0, 1500) : "General professional role — optimize for ATS with strong action verbs and measurable results."}
+
+Rules: strong action verbs, measurable results, include keywords from job description, ATS-friendly format.`, 1200
       );
       const clean = result.replace(/```json|```/g, "").trim();
       const improved = JSON.parse(clean);
       setResumeData(improved);
       setScores((prev) => prev ? { ...prev, ats: Math.min(98, prev.ats + 18), keyword: Math.min(98, prev.keyword + 15), impact: Math.min(98, prev.impact + 20) } : prev);
-      showToast("🚀 Resume optimized with AI!");
+      showToast("🚀 Resume tailored to the job!");
     } catch {
       showToast("Error fixing resume. Try again.");
     }
@@ -1329,7 +1332,6 @@ ${(resumeData.education || []).join("\n")}
     { id: "upload", label: "Upload" },
     { id: "scan", label: "ATS Scan" },
     { id: "fix", label: "AI Fix" },
-    { id: "match", label: "Job Match" },
     { id: "cover", label: "Cover Letter" },
     { id: "download", label: "Export" },
   ];
@@ -1499,149 +1501,92 @@ ${(resumeData.education || []).join("\n")}
           {tab === "fix" && (
             <div>
               <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "1.8rem", fontWeight: 800, marginBottom: "0.5rem", letterSpacing: "-0.02em" }}>AI Resume Fixer</h2>
-              <p style={{ color: COLORS.muted, marginBottom: "1.5rem" }}>Click the button below and AI will optimize your entire resume instantly.</p>
+              <p style={{ color: COLORS.muted, marginBottom: "2rem" }}>Paste the job description below and AI will optimize your resume to match it perfectly.</p>
 
-              {/* ACTION BUTTONS */}
-              <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap", alignItems: "center" }}>
-                <button className="btn btn-primary" style={{ padding: "12px 28px" }} onClick={fixResume} disabled={loadingFix}>
-                  {loadingFix ? <><span className="spinner" /> Optimizing with AI...</> : "🤖 Fix My Resume With AI"}
-                </button>
-                {resumeData?.name && (
-                  <button className="btn btn-outline" onClick={() => setTab("match")}>
-                    Next: Job Match →
-                  </button>
-                )}
-              </div>
-
-              {/* LOADING STATE */}
-              {loadingFix && (
-                <div style={{ textAlign: "center", padding: "3rem", color: COLORS.muted }}>
-                  <div className="spinner" style={{ width: 40, height: 40, marginBottom: "1rem", borderWidth: 3 }} />
-                  <p>AI is rewriting your resume...</p>
-                  <p style={{ fontSize: "0.8rem", marginTop: "0.5rem", color: COLORS.dim }}>Adding strong action verbs, measurable results & ATS keywords ✨</p>
-                </div>
-              )}
-
-              {/* RESUME PREVIEW */}
-              {!loadingFix && resumeData && (
-                <div style={{ maxWidth: 800, margin: "0 auto" }}>
-                  <div style={{ background: "white", borderRadius: 16, padding: "2.5rem", color: "#1A1A1A", fontFamily: "Georgia, serif", lineHeight: 1.75, boxShadow: "0 4px 40px rgba(0,0,0,0.3)" }}>
-
-                    {/* HEADER */}
-                    <div style={{ borderBottom: "2px solid #1A1A1A", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
-                      <div style={{ fontSize: "1.8rem", fontWeight: 700, letterSpacing: "-0.02em" }}>{resumeData.name || "Your Name"}</div>
-                      <div style={{ color: "#555", fontSize: "0.9rem", marginTop: "4px" }}>
-                        {[resumeData.email, resumeData.phone].filter(Boolean).join(" · ")}
-                      </div>
-                    </div>
-
-                    {/* SUMMARY */}
-                    {resumeData.summary && (
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.5rem", fontFamily: "sans-serif" }}>Professional Summary</div>
-                        <p style={{ fontSize: "0.9rem", color: "#333" }}>{resumeData.summary}</p>
-                      </div>
-                    )}
-
-                    {/* EXPERIENCE */}
-                    {(resumeData.experience || []).length > 0 && (
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.75rem", fontFamily: "sans-serif" }}>Work Experience</div>
-                        {resumeData.experience.map((e, i) => (
-                          <div key={i} style={{ fontSize: "0.88rem", color: "#333", marginBottom: "0.4rem", paddingLeft: "1rem", borderLeft: "2px solid #ddd" }}>• {e}</div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* SKILLS */}
-                    {(resumeData.skills || []).length > 0 && (
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.5rem", fontFamily: "sans-serif" }}>Skills</div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-                          {resumeData.skills.map((s, i) => (
-                            <span key={i} style={{ background: "#f0f0f0", borderRadius: 6, padding: "3px 10px", fontSize: "0.82rem", color: "#333" }}>{s}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* EDUCATION */}
-                    {(resumeData.education || []).length > 0 && (
-                      <div>
-                        <div style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.5rem", fontFamily: "sans-serif" }}>Education</div>
-                        {resumeData.education.map((e, i) => (
-                          <div key={i} style={{ fontSize: "0.88rem", color: "#333", marginBottom: "0.3rem" }}>• {e}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* NEXT BUTTON BELOW PREVIEW */}
-                  <div style={{ display: "flex", justifyContent: "center", marginTop: "1.5rem" }}>
-                    <button className="btn btn-primary" style={{ padding: "14px 40px", fontSize: "1rem" }} onClick={() => setTab("match")}>
-                      Next: Job Match →
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* MATCH TAB */}
-          {tab === "match" && (
-            <div>
-              <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "1.8rem", fontWeight: 800, marginBottom: "0.5rem", letterSpacing: "-0.02em" }}>Job Match Analysis</h2>
-              <p style={{ color: COLORS.muted, marginBottom: "2rem" }}>Paste the job description to see how well your resume matches.</p>
               <div className="grid-2">
+                {/* LEFT — Job Description Input */}
                 <div>
                   <div className="card">
                     <div className="card-title"><span className="icon">📋</span> Job Description</div>
-                    <textarea className="textarea" style={{ minHeight: 250 }}
+                    <p style={{ color: COLORS.muted, fontSize: "0.85rem", marginBottom: "1rem" }}>Paste the job posting here. AI will tailor your resume to match the keywords and requirements.</p>
+                    <textarea className="textarea" style={{ minHeight: 220 }}
                       placeholder="Paste the full job description here..."
                       value={jobDesc} onChange={(e) => setJobDesc(e.target.value)} />
                     <button className="btn btn-primary" style={{ marginTop: "1rem", width: "100%" }}
-                      onClick={analyzeJobMatch} disabled={!jobDesc || loading}>
-                      {loading ? <><span className="spinner" /> Analyzing...</> : "🎯 Analyze Match"}
+                      onClick={fixResume} disabled={loadingFix || !jobDesc}>
+                      {loadingFix ? <><span className="spinner" /> Optimizing your resume...</> : "🤖 Optimize My Resume With AI"}
                     </button>
+                    {!jobDesc && (
+                      <p style={{ fontSize: "0.78rem", color: COLORS.dim, marginTop: "0.5rem", textAlign: "center" }}>Paste a job description above to enable</p>
+                    )}
                   </div>
                 </div>
+
+                {/* RIGHT — Resume Preview */}
                 <div>
-                  {matchScore !== null ? (
-                    <>
-                      <div className="card">
-                        <div className="card-title"><span className="icon">🎯</span> Job Match Score</div>
-                        <ScoreGauge score={matchScore} label="Keyword Match" />
-                        <div style={{ textAlign: "center" }}>
-                          <span className="chip" style={{
-                            background: `rgba(${matchScore >= 80 ? "0,212,170" : matchScore >= 60 ? "255,184,0" : "255,77,106"},0.12)`,
-                            color: scoreColor(matchScore),
-                            border: `1px solid ${scoreColor(matchScore)}40`,
-                            fontSize: "0.85rem", padding: "6px 16px"
-                          }}>
-                            {matchScore >= 80 ? "✅ Strong Match" : matchScore >= 60 ? "⚠️ Moderate Match" : "❌ Weak Match"}
-                          </span>
-                        </div>
-                      </div>
-                      {missingKw.length > 0 && (
-                        <div className="card">
-                          <div className="card-title"><span className="icon">⚠️</span> Missing Keywords</div>
-                          <p style={{ color: COLORS.muted, fontSize: "0.85rem", marginBottom: "0.75rem" }}>Add these to improve your match score:</p>
-                          <div>
-                            {missingKw.map((kw) => <span key={kw} className="chip chip-red">{kw}</span>)}
+                  {loadingFix ? (
+                    <div style={{ textAlign: "center", padding: "4rem", color: COLORS.muted }}>
+                      <div className="spinner" style={{ width: 40, height: 40, marginBottom: "1rem", borderWidth: 3 }} />
+                      <p>AI is tailoring your resume to the job...</p>
+                      <p style={{ fontSize: "0.8rem", marginTop: "0.5rem", color: COLORS.dim }}>Adding matching keywords & rewriting bullet points ✨</p>
+                    </div>
+                  ) : resumeData?.name ? (
+                    <div>
+                      <div style={{ background: "white", borderRadius: 16, padding: "2rem", color: "#1A1A1A", fontFamily: "Georgia, serif", lineHeight: 1.75, boxShadow: "0 4px 40px rgba(0,0,0,0.3)" }}>
+                        {/* Header */}
+                        <div style={{ borderBottom: "2px solid #1A1A1A", paddingBottom: "0.75rem", marginBottom: "1.25rem" }}>
+                          <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>{resumeData.name}</div>
+                          <div style={{ color: "#555", fontSize: "0.85rem", marginTop: 2 }}>
+                            {[resumeData.email, resumeData.phone].filter(Boolean).join(" · ")}
                           </div>
-                          <button className="btn btn-primary btn-sm" style={{ marginTop: "1rem" }} onClick={() => setTab("fix")}>
-                            ✏️ Add to Resume
-                          </button>
                         </div>
-                      )}
-                      <button className="btn btn-teal" style={{ width: "100%", padding: 12 }} onClick={() => setTab("cover")}>
-                        ✉️ Generate Cover Letter →
+                        {/* Summary */}
+                        {resumeData.summary && (
+                          <div style={{ marginBottom: "1rem" }}>
+                            <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.4rem", fontFamily: "sans-serif" }}>Professional Summary</div>
+                            <p style={{ fontSize: "0.85rem", color: "#333" }}>{resumeData.summary}</p>
+                          </div>
+                        )}
+                        {/* Experience */}
+                        {(resumeData.experience || []).length > 0 && (
+                          <div style={{ marginBottom: "1rem" }}>
+                            <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.4rem", fontFamily: "sans-serif" }}>Experience</div>
+                            {resumeData.experience.map((e, i) => (
+                              <div key={i} style={{ fontSize: "0.83rem", color: "#333", marginBottom: "0.3rem" }}>• {e}</div>
+                            ))}
+                          </div>
+                        )}
+                        {/* Skills */}
+                        {(resumeData.skills || []).length > 0 && (
+                          <div style={{ marginBottom: "1rem" }}>
+                            <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.4rem", fontFamily: "sans-serif" }}>Skills</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+                              {resumeData.skills.map((s, i) => (
+                                <span key={i} style={{ background: "#f0f0f0", borderRadius: 4, padding: "2px 8px", fontSize: "0.78rem", color: "#333" }}>{s}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {/* Education */}
+                        {(resumeData.education || []).length > 0 && (
+                          <div>
+                            <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#333", marginBottom: "0.4rem", fontFamily: "sans-serif" }}>Education</div>
+                            {resumeData.education.map((e, i) => (
+                              <div key={i} style={{ fontSize: "0.83rem", color: "#333" }}>• {e}</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {/* Next Button */}
+                      <button className="btn btn-primary" style={{ width: "100%", marginTop: "1rem", padding: "14px" }}
+                        onClick={() => setTab("cover")}>
+                        Next: Generate Cover Letter →
                       </button>
-                    </>
+                    </div>
                   ) : (
                     <div className="card" style={{ textAlign: "center", padding: "3rem", color: COLORS.muted }}>
-                      <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎯</div>
-                      <p>Paste a job description and click Analyze Match to see your compatibility score and missing keywords.</p>
+                      <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📄</div>
+                      <p>Your optimized resume will appear here after AI fixes it.</p>
                     </div>
                   )}
                 </div>
