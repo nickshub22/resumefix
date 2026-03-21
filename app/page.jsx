@@ -588,17 +588,56 @@ const MetricBar = ({ label, value, color }) => (
 
 const UploadZone = ({ onText }) => {
   const [drag, setDrag] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const fileRef = useRef();
+
+  const extractPDFText = async (file) => {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+      script.onload = async () => {
+        try {
+          const pdfjsLib = window.pdfjsLib;
+          pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          let fullText = "";
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const pageText = content.items.map((item) => item.str).join(" ");
+            fullText += pageText + "\n";
+          }
+          resolve(fullText);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      script.onerror = reject;
+      if (!document.querySelector('script[src*="pdf.min.js"]')) {
+        document.head.appendChild(script);
+      } else {
+        script.onload();
+      }
+    });
+  };
 
   const handleFile = async (file) => {
     if (!file) return;
     const ext = file.name.split(".").pop().toLowerCase();
-    if (ext === "txt") {
+    if (ext === "pdf") {
+      setExtracting(true);
+      try {
+        const text = await extractPDFText(file);
+        onText(text, file.name);
+      } catch {
+        // If PDF.js fails, fall back to paste prompt
+        onText("__PDF_UPLOADED__:" + file.name, file.name);
+      }
+      setExtracting(false);
+    } else if (ext === "txt") {
       const text = await file.text();
       onText(text, file.name);
-    } else if (ext === "pdf") {
-      // PDFs can't be read as text in browser — ask user to paste text instead
-      onText("__PDF_UPLOADED__:" + file.name, file.name);
     } else {
       const text = await file.text().catch(() => "");
       onText(text || "", file.name);
@@ -611,16 +650,26 @@ const UploadZone = ({ onText }) => {
       onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
       onDragLeave={() => setDrag(false)}
       onDrop={(e) => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]); }}
-      onClick={() => fileRef.current.click()}
+      onClick={() => !extracting && fileRef.current.click()}
     >
       <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }}
         onChange={(e) => handleFile(e.target.files[0])} />
-      <div className="upload-icon">📄</div>
-      <h3>Drop your resume here</h3>
-      <p>or click to browse files</p>
-      <div className="upload-types">
-        {["PDF", "DOCX", "TXT"].map((t) => <span key={t} className="type-tag">{t}</span>)}
-      </div>
+      {extracting ? (
+        <>
+          <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>⏳</div>
+          <h3>Reading your PDF...</h3>
+          <p>Extracting text automatically</p>
+        </>
+      ) : (
+        <>
+          <div className="upload-icon">📄</div>
+          <h3>Drop your resume here</h3>
+          <p>or click to browse files</p>
+          <div className="upload-types">
+            {["PDF", "DOCX", "TXT"].map((t) => <span key={t} className="type-tag">{t}</span>)}
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -1093,7 +1142,6 @@ ${(resumeData.education || []).join("\n")}
           <nav className="nav">
             <div className="nav-logo">Resume<span>Fix</span></div>
             <div className="nav-right">
-              <span style={{ fontSize: "0.85rem", color: COLORS.muted }}>resumefix.online</span>
               <button className="nav-pill" onClick={() => setPhase("app")}>Try for Free →</button>
             </div>
           </nav>
@@ -1325,12 +1373,9 @@ ${(resumeData.education || []).join("\n")}
               <div className="grid-2">
                 <div>
                   <UploadZone onText={handleUpload} />
-                  <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "rgba(255,184,0,0.08)", border: "1px solid rgba(255,184,0,0.25)", borderRadius: 10, fontSize: "0.82rem", color: COLORS.amber }}>
-                    💡 <strong>Have a PDF?</strong> Open it, press <strong>Ctrl+A</strong> then <strong>Ctrl+C</strong> to copy all text, then paste it below.
-                  </div>
                   <div style={{ marginTop: "1rem" }}>
-                    <p style={{ color: COLORS.muted, fontSize: "0.85rem", marginBottom: "0.75rem" }}>Paste your resume text here:</p>
-                    <textarea className="textarea" style={{ minHeight: 200 }} placeholder="Paste your resume content here (works best with copied text from PDF or Word)..."
+                    <p style={{ color: COLORS.muted, fontSize: "0.85rem", marginBottom: "0.75rem" }}>Or paste your resume text here:</p>
+                    <textarea className="textarea" style={{ minHeight: 200 }} placeholder="Paste your resume content here..."
                       value={rawText} onChange={(e) => setRawText(e.target.value)} />
                     <button className="btn btn-primary" style={{ marginTop: "0.75rem", width: "100%" }}
                       onClick={() => rawText && handleUpload(rawText, "pasted-resume.txt")} disabled={!rawText || loading}>
