@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useRef, useCallback } from "react";
 
 const COLORS = {
@@ -595,10 +596,12 @@ const UploadZone = ({ onText }) => {
     if (ext === "txt") {
       const text = await file.text();
       onText(text, file.name);
+    } else if (ext === "pdf") {
+      // PDFs can't be read as text in browser — ask user to paste text instead
+      onText("__PDF_UPLOADED__:" + file.name, file.name);
     } else {
-      // For PDF/DOCX - read as text (simplified)
       const text = await file.text().catch(() => "");
-      onText(text || `[${file.name} - content extracted]`, file.name);
+      onText(text || "", file.name);
     }
   };
 
@@ -843,15 +846,45 @@ Skills: ${(parsedData.skills || []).join(", ")}`, 1200
   };
 
   const handleUpload = async (text, name) => {
+    // If PDF was uploaded, show paste fallback instead
+    if (text.startsWith("__PDF_UPLOADED__:")) {
+      showToast("📋 PDF detected! Please paste your resume text below.");
+      setTab("upload");
+      setLoading(false);
+      return;
+    }
+
     setRawText(text);
     setFileName(name);
-    const parsed = parseResumeText(text);
-    setResumeData(parsed);
     setTab("scan");
     setLoading(true);
+
     try {
+      // Use Claude AI to parse the resume properly
+      const parseResult = await callClaude(
+        `Extract information from this resume text and return ONLY valid JSON (no markdown):
+{
+  "name": "full name or empty string",
+  "email": "email or empty string",
+  "phone": "phone or empty string",
+  "summary": "professional summary paragraph or empty string",
+  "experience": ["job bullet point 1", "job bullet point 2", "job bullet point 3"],
+  "skills": ["skill1", "skill2", "skill3"],
+  "education": ["education entry 1"],
+  "certifications": [],
+  "projects": []
+}
+
+Resume text:
+${text.slice(0, 3000)}`, 800
+      );
+      const cleanParse = parseResult.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(cleanParse);
+      setResumeData(parsed);
+
+      // Now analyze ATS score
       const result = await callClaude(
-        `Analyze this resume for ATS compatibility and return ONLY valid JSON (no markdown, no explanation):
+        `Analyze this resume for ATS compatibility and return ONLY valid JSON (no markdown):
 {
   "ats": <number 0-100>,
   "keyword": <number 0-100>,
@@ -862,19 +895,24 @@ Skills: ${(parsedData.skills || []).join(", ")}`, 1200
   "suggestions": ["suggestion1", "suggestion2", "suggestion3", "suggestion4", "suggestion5"]
 }
 
-Resume text:
+Resume:
 ${text.slice(0, 3000)}`, 600
       );
       const clean = result.replace(/```json|```/g, "").trim();
-      const parsed2 = JSON.parse(clean);
-      setScores(parsed2);
-      setSuggestions(parsed2.suggestions || []);
+      const scores = JSON.parse(clean);
+      setScores(scores);
+      setSuggestions(scores.suggestions || []);
+      generateInterviewPrep(text, parsed);
+      showToast("✅ Resume scanned successfully!");
     } catch {
+      // Fallback if AI parsing fails
+      const parsed = parseResumeText(text);
+      setResumeData(parsed);
       setScores({ ats: 62, keyword: 58, formatting: 78, impact: 55, skills: 65, readability: 72, suggestions: [] });
+      generateInterviewPrep(text, parsed);
+      showToast("✅ Resume scanned!");
     }
     setLoading(false);
-    showToast("✅ Resume scanned successfully!");
-    generateInterviewPrep(text, parsed);
   };
 
   const fixResume = async () => {
@@ -1287,13 +1325,16 @@ ${(resumeData.education || []).join("\n")}
               <div className="grid-2">
                 <div>
                   <UploadZone onText={handleUpload} />
-                  <div style={{ marginTop: "1.5rem" }}>
-                    <p style={{ color: COLORS.muted, fontSize: "0.85rem", marginBottom: "1rem" }}>Or paste your resume text:</p>
-                    <textarea className="textarea" style={{ minHeight: 200 }} placeholder="Paste your resume content here..."
+                  <div style={{ marginTop: "1rem", padding: "0.75rem 1rem", background: "rgba(255,184,0,0.08)", border: "1px solid rgba(255,184,0,0.25)", borderRadius: 10, fontSize: "0.82rem", color: COLORS.amber }}>
+                    💡 <strong>Have a PDF?</strong> Open it, press <strong>Ctrl+A</strong> then <strong>Ctrl+C</strong> to copy all text, then paste it below.
+                  </div>
+                  <div style={{ marginTop: "1rem" }}>
+                    <p style={{ color: COLORS.muted, fontSize: "0.85rem", marginBottom: "0.75rem" }}>Paste your resume text here:</p>
+                    <textarea className="textarea" style={{ minHeight: 200 }} placeholder="Paste your resume content here (works best with copied text from PDF or Word)..."
                       value={rawText} onChange={(e) => setRawText(e.target.value)} />
                     <button className="btn btn-primary" style={{ marginTop: "0.75rem", width: "100%" }}
-                      onClick={() => rawText && handleUpload(rawText, "pasted-resume.txt")} disabled={!rawText}>
-                      {loading ? <><span className="spinner" /> Analyzing...</> : "📊 Scan My Resume"}
+                      onClick={() => rawText && handleUpload(rawText, "pasted-resume.txt")} disabled={!rawText || loading}>
+                      {loading ? <><span className="spinner" /> Analyzing with AI...</> : "📊 Scan My Resume"}
                     </button>
                   </div>
                 </div>
